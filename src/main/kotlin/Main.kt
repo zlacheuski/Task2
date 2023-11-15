@@ -57,11 +57,9 @@ class Customer(private val name: String) {
 fun main() {
     val rental1 = Rental(Car("Mustang", PriceCode.MUSCLE), 5)
     val rental2 = Rental(Car("Lambo", PriceCode.SUPERCAR), 20)
-    val rental3 = Rental(Car("Audi", PriceCode.ECONOMY), 8)
     val customer = Customer("Liviu")
     customer.addRental(rental1)
     customer.addRental(rental2)
-    customer.addRental(rental3)
 
     println(customer.billingStatement())
 }
