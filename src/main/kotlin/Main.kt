@@ -11,20 +11,23 @@ data class Rental(val car: Car, private val _daysRented: Int) {
         get() = maxOf(0, _daysRented)
 }
 
-class Customer(private val name: String) {
+data class Customer(val name: String) {
 
-    private val rentals = mutableListOf<Rental>()
+    val rentals = mutableListOf<Rental>()
 
     fun addRental(rental: Rental) {
         rentals.add(rental)
     }
+}
 
-    fun billingStatement(): String {
+object BillingCalculation{
+
+    fun billingStatement(customer: Customer): String {
         var totalAmount = 0.0
         var frequentRenterPoints = 0
-        var result = "Rental Record for $name\n"
+        var result = "Rental Record for ${customer.name}\n"
 
-        rentals.forEach { rental ->
+        customer.rentals.forEach { rental ->
             val thisAmount = getRentalCost(rental)
             frequentRenterPoints++
 
@@ -61,5 +64,5 @@ fun main() {
     customer.addRental(rental1)
     customer.addRental(rental2)
 
-    println(customer.billingStatement())
+    println(BillingCalculation.billingStatement(customer))
 }
