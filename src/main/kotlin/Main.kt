@@ -1,14 +1,35 @@
+import java.lang.StringBuilder
+
 enum class PriceCode {
     ECONOMY,
     SUPERCAR,
     MUSCLE
 }
 
-data class Car(val title: String, var priceCode: PriceCode)
-data class Rental(val car: Car, private val _daysRented: Int) {
+data class Car(
+    val title: String,
+    var priceCode: PriceCode
+)
 
+data class Rental(
+    val car: Car,
     val daysRented: Int
-        get() = maxOf(0, _daysRented)
+) {
+    init {
+        if (daysRented < 0) {
+            throw IllegalArgumentException("DaysRented must be greater than 0")
+        }
+    }
+
+    val getRentalCost: Double
+        get() = when (car.priceCode) {
+            PriceCode.ECONOMY -> maxOf(0, daysRented - 2) * 30.0 + 80.0
+            PriceCode.SUPERCAR -> daysRented.toDouble() * 200.0
+            PriceCode.MUSCLE -> maxOf(0, daysRented - 3) * 50.0 + 200.0
+        }
+
+    val isBonusesIncluded: Boolean
+        get() = car.priceCode == PriceCode.SUPERCAR && daysRented > 1
 }
 
 data class Customer(val name: String) {
@@ -20,40 +41,29 @@ data class Customer(val name: String) {
     }
 }
 
-object BillingCalculation{
+class BillingCalculation(private val customer: Customer) {
 
-    fun billingStatement(customer: Customer): String {
+    fun billingStatement(): String {
         var totalAmount = 0.0
         var frequentRenterPoints = 0
-        var result = "Rental Record for ${customer.name}\n"
+        val result = StringBuilder()
+            .append("Rental Record for ${customer.name}\n")
 
         customer.rentals.forEach { rental ->
-            val thisAmount = getRentalCost(rental)
+            val thisAmount = rental.getRentalCost
             frequentRenterPoints++
 
-            if (isBonusesIncluded(rental)) {
+            if (rental.isBonusesIncluded) {
                 frequentRenterPoints++
             }
 
-            result += "\t${rental.car.title}\t$thisAmount\n"
+            result.append("\t${rental.car.title}\t$thisAmount\n")
             totalAmount += thisAmount
         }
 
-        result += "Final rental payment owed $totalAmount\n"
-        result += "You received an additional $frequentRenterPoints frequent customer points"
-        return result
-    }
-
-    private fun isBonusesIncluded(rental: Rental): Boolean {
-        return rental.car.priceCode == PriceCode.SUPERCAR && rental.daysRented > 1
-    }
-
-    private fun getRentalCost(rental: Rental): Double {
-        return when (rental.car.priceCode) {
-            PriceCode.ECONOMY -> maxOf(0, rental.daysRented - 2) * 30.0 + 80.0
-            PriceCode.SUPERCAR -> rental.daysRented.toDouble() * 200.0
-            PriceCode.MUSCLE -> maxOf(0, rental.daysRented - 3) * 50.0 + 200.0
-        }
+        result.append("Final rental payment owed $totalAmount\n")
+        result.append("You received an additional $frequentRenterPoints frequent customer points")
+        return result.toString()
     }
 }
 
@@ -64,5 +74,5 @@ fun main() {
     customer.addRental(rental1)
     customer.addRental(rental2)
 
-    println(BillingCalculation.billingStatement(customer))
+    println(BillingCalculation(customer).billingStatement())
 }
